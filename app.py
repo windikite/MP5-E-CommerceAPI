@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_cors import CORS
 from password import my_password
 from marshmallow import fields, ValidationError, validate
 from sqlalchemy import select
@@ -17,6 +18,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://root:{my_password}@localhost/e_commerce_db'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+CORS(app)
 
 class CustomerSchema(ma.Schema):
     name = fields.String(required=True, validate=validate.Length(min=1))
@@ -168,7 +170,7 @@ def delete_customer(id):
     customer = Customer.query.get_or_404(id)
     db.session.delete(customer)
     db.session.commit()
-    return jsonify({'message': 'Customer removed successfully'}), 300
+    return jsonify({'message': 'Customer removed successfully'}), 200
 
 # product routes
 @app.route('/products', methods=['GET'])
@@ -216,7 +218,7 @@ def delete_product(id):
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
-    return jsonify({'message': 'Product removed successfully'}), 300
+    return jsonify({'message': 'Product removed successfully'}), 200
 
 # customer_account routes
 @app.route('/accounts', methods=['GET'])
@@ -264,7 +266,7 @@ def delete_account(id):
     account = CustomerAccount.query.get_or_404(id)
     db.session.delete(account)
     db.session.commit()
-    return jsonify({'message': 'Account removed successfully'}), 300
+    return jsonify({'message': 'Account removed successfully'}), 200
 
 # order routes
 @app.route('/orders', methods=['GET'])
@@ -286,6 +288,7 @@ def get_order_by_id(id):
         total = total + x[1].get('price')
     # accounts = CustomerAccount.query.all()
     new_json = {
+        'order_id':orders.id,
         'customer_id':id, 
         'order_date':orders.order_date, 
         'expected_delivery':orders.expected_delivery, 
@@ -306,6 +309,7 @@ def get_order_by_customer_id(id):
     for i, order in enumerate(orders):
         # create the order json we will update the orders dictionary with
         order_json = {
+            'order_id':order.id,
             'order_date':order.order_date, 
             'expected_delivery':order.expected_delivery, 
             'shipping_status':order.shipping_status, 
